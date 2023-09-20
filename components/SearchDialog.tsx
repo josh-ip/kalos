@@ -19,7 +19,7 @@ export function SearchDialog() {
   const [query, setQuery] = React.useState<string>('')
 
   const { complete, completion, isLoading, error } = useCompletion({
-    api: '/api/vector-search',
+    api: '/api/replicate',
   })
 
   React.useEffect(() => {

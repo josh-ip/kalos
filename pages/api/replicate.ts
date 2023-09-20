@@ -66,59 +66,15 @@ export default async function handler(req: NextRequest) {
       })
     }
 
-    // Create embedding from query
-    const embeddingResponse = await openai.createEmbedding({
-      model: 'text-embedding-ada-002',
-      input: sanitizedQuery.replaceAll('\n', ' '),
-    })
-
-    if (embeddingResponse.status !== 200) {
-      throw new ApplicationError('Failed to create embedding for question', embeddingResponse)
-    }
-
-    const {
-      data: [{ embedding }],
-    }: CreateEmbeddingResponse = await embeddingResponse.json()
-
-    const { error: matchError, data: pageSections } = await supabaseClient.rpc(
-      'match_page_sections',
-      {
-        embedding,
-        match_threshold: 0.78,
-        match_count: 10,
-        min_content_length: 50,
-      }
-    )
-
-    if (matchError) {
-      throw new ApplicationError('Failed to match page sections', matchError)
-    }
-
     const tokenizer = new GPT3Tokenizer({ type: 'gpt3' })
     let tokenCount = 0
     let contextText = ''
 
-    for (let i = 0; i < pageSections.length; i++) {
-      const pageSection = pageSections[i]
-      const content = pageSection.content
-      const encoded = tokenizer.encode(content)
-      tokenCount += encoded.text.length
-
-      if (tokenCount >= 1500) {
-        break
-      }
-
-      contextText += `${content.trim()}\n---\n`
-    }
-
+    //TODO: Pull this out into a const.ts file for matt
     const prompt = codeBlock`
       ${oneLine`
         You are a very enthusiastic Supabase representative who loves
-        to help people! Given the following sections from the Supabase
-        documentation, answer the question using only that information,
-        outputted in markdown format. If you are unsure and the answer
-        is not explicitly written in the documentation, say
-        "Sorry, I don't know how to help with that."
+        to help people! Make up a random sentence that you care about
       `}
 
       Context sections:
@@ -137,7 +93,7 @@ export default async function handler(req: NextRequest) {
     }
 
     const response = await openai.createChatCompletion({
-      model: 'gpt-3.5-turbo',
+      model: 'gpt-4',
       messages: [chatMessage],
       max_tokens: 512,
       temperature: 0,

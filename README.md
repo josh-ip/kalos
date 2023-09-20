@@ -1,3 +1,7 @@
+## README Additions from Josh
+
+1. Need to add a .env file with the environmental variables (Josh has them and can send). Instructions on how to make a .env file are below in "Local Development" –> "Configuration"
+
 # Next.js OpenAI Doc Search Starter
 
 This starter takes all the `.mdx` files in the `pages` directory and processes them to use as custom context within [OpenAI Text Completion](https://platform.openai.com/docs/guides/completion) prompts.
