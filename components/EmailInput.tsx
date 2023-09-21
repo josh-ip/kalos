@@ -34,26 +34,26 @@ export function EmailInput() {
   const complete2 = completionObject.complete;
   const completion2 = completionObject.completion;
 
-  React.useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === "k" && e.metaKey) {
-        setOpen(true);
-      }
+  // React.useEffect(() => {
+  //   const down = (e: KeyboardEvent) => {
+  //     if (e.key === "k" && e.metaKey) {
+  //       setOpen(true);
+  //     }
 
-      if (e.key === "Escape") {
-        console.log("esc");
-        handleModalToggle();
-      }
-    };
+  //     if (e.key === "Escape") {
+  //       console.log("esc");
+  //       handleModalToggle();
+  //     }
+  //   };
 
-    document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
-  }, []);
+  //   document.addEventListener("keydown", down);
+  //   return () => document.removeEventListener("keydown", down);
+  // }, []);
 
-  function handleModalToggle() {
-    setOpen(!open);
-    setQuery("");
-  }
+  // function handleModalToggle() {
+  //   setOpen(!open);
+  //   setQuery("");
+  // }
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
@@ -83,13 +83,18 @@ export function EmailInput() {
               </Grid>
               <Grid xs={12}>
                 {popularQuestion.length > 0 &&
-                  popularQuestion.map((item: popularQuestionsProps) => {
-                    return (
-                      <Button onClick={() => setQuery(item.question)}>
-                        {item.question}
-                      </Button>
-                    );
-                  })}
+                  popularQuestion.map(
+                    (item: popularQuestionsProps, index: number) => {
+                      return (
+                        <Button
+                          key={index}
+                          onClick={() => setQuery(item.question)}
+                        >
+                          {item.question}
+                        </Button>
+                      );
+                    },
+                  )}
               </Grid>
               <Grid container xs={12}>
                 <TextField

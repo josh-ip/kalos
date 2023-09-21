@@ -1,6 +1,14 @@
 ## README Additions from Josh
 
+### Setup
+
 1. Need to add a .env file with the environmental variables (Josh has them and can send). Instructions on how to make a .env file are below in "Local Development" –> "Configuration"
+
+### Ongoing usage
+
+1. to run the server, type "pnpm dev" into the terminal
+2. If you are getting some type of node modules exception, try the command "pnpm install" and then "pnpm dev" again
+3. remember the URL is localhost:3000 (/kalos)
 
 # Next.js OpenAI Doc Search Starter
 
