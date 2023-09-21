@@ -51,6 +51,8 @@ export default async function handler(req: NextRequest) {
     if (!query) {
       throw new UserError("Missing query in request data");
     }
+    console.log("hello world");
+    console.log(query);
 
     const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -106,22 +108,54 @@ export default async function handler(req: NextRequest) {
     Start by answering the question as directly as possible. Be very concise. Give a 3 sentence summary and include direct quotes.
 
     Context Sections between interviewer (Tegus Client) and the ${title}: 
-    ${replit_call}
     `;
+    //     ${replit_call}
 
     const chatMessage: ChatCompletionRequestMessage = {
       role: "user",
-      content: prompt,
+      content: "what's your favorite fruit?",
     };
 
     // Backup: do Promise.all to chain the response and turn off SSR and just receive the text back. Would be easier
     const response = await openai.createChatCompletion({
-      model: "gpt-4",
+      model: "gpt-3.5-turbo-16k",
       messages: [chatMessage],
-      max_tokens: 512,
+      max_tokens: 20,
       temperature: 0,
-      stream: true,
+      // stream: true,
     });
+
+    // Create an array of promises to push into Promise.all() based on requested responses
+
+    const values = [1, 2, 3];
+    let requestedPersonas = [];
+    for (const value of values) {
+      requestedPersonas.push(
+        openai.createChatCompletion({
+          model: "gpt-3.5-turbo",
+          messages: [chatMessage],
+          max_tokens: 20,
+          temperature: 1,
+          // stream: true,
+        }),
+      );
+    }
+
+    // Push promsies into Promise.all()
+
+    let stitchedResponse = "";
+    await Promise.all(requestedPersonas).then(async (values) => {
+      let counter = 1;
+      for (const value of values) {
+        const response = await value.json();
+        stitchedResponse +=
+          `Response #${counter}:\n` +
+          response.choices[0].message.content +
+          `\n`;
+        counter++;
+      }
+    });
+    console.log(stitchedResponse);
 
     if (!response.ok) {
       const error = await response.json();
@@ -129,10 +163,24 @@ export default async function handler(req: NextRequest) {
     }
 
     // Transform the response into a readable stream
-    const stream = OpenAIStream(response);
+    // const stream = OpenAIStream(response);
+    let chat_message = await response.json();
+    chat_message = chat_message.choices[0].message.content;
 
     // Return a StreamingTextResponse, which can be consumed by the client
-    return new StreamingTextResponse(stream);
+
+    return new Response(
+      JSON.stringify({
+        completion: stitchedResponse,
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+
+    return response;
+    //new StreamingTextResponse(stream);
   } catch (err: unknown) {
     if (err instanceof UserError) {
       return new Response(
