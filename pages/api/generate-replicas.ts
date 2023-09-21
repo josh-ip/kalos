@@ -1,8 +1,9 @@
 import { ApplicationError, UserError } from "@/lib/errors";
-import { createClient } from "@supabase/supabase-js";
+import { SupabaseClient, createClient } from "@supabase/supabase-js";
+import GPT3Tokenizer from "gpt3-tokenizer";
 import { NextRequest } from "next/server";
 import "openai";
-import { Configuration, OpenAIApi } from "openai-edge";
+import { Configuration, OpenAIApi, CreateEmbeddingResponse } from "openai-edge";
 
 import { inspect } from "util";
 
@@ -90,13 +91,15 @@ export default async function handler(req: NextRequest) {
           input,
         });
 
-        const responseData = await embeddingResponse.json();
-
-        console.log(responseData);
+        const {
+          usage: { total_tokens },
+          data: [{ embedding }],
+          data,
+        } = await embeddingResponse.json();
 
         if (embeddingResponse.status !== 200) {
           console.error("ERROR");
-          throw new Error(inspect(responseData.data, false, 2));
+          throw new Error(inspect(data, false, 2));
         }
 
         const { error: insertPageSectionError, data: pageSection } =
@@ -105,8 +108,8 @@ export default async function handler(req: NextRequest) {
             .insert({
               page_id: page.id,
               content,
-              token_count: responseData.usage.total_tokens,
-              embedding: responseData.data[0].embedding,
+              token_count: total_tokens,
+              embedding,
             })
             .select()
             .limit(1)

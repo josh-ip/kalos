@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { SupabaseClient, createClient } from "@supabase/supabase-js";
 import { codeBlock, oneLine } from "common-tags";
 import GPT3Tokenizer from "gpt3-tokenizer";
 import {
@@ -23,6 +23,58 @@ const config = new Configuration({
 const openai = new OpenAIApi(config);
 
 export const runtime = "edge";
+
+async function findEmbeddings(supabaseClient: SupabaseClient, query: string) {
+  // Create embedding from query
+  const embeddingResponse = await openai.createEmbedding({
+    model: "text-embedding-ada-002",
+    input: query.replaceAll("\n", " "),
+  });
+
+  if (embeddingResponse.status !== 200) {
+    throw new ApplicationError(
+      "Failed to create embedding for question",
+      embeddingResponse,
+    );
+  }
+
+  const {
+    data: [{ embedding }],
+  }: CreateEmbeddingResponse = await embeddingResponse.json();
+
+  const { error: matchError, data: pageSections } = await supabaseClient.rpc(
+    "match_replica_page_sections",
+    {
+      embedding,
+      match_threshold: 0.78,
+      match_count: 10,
+      min_content_length: 50,
+    },
+  );
+
+  if (matchError) {
+    throw new ApplicationError("Failed to match page sections", matchError);
+  }
+
+  const tokenizer = new GPT3Tokenizer({ type: "gpt3" });
+  let tokenCount = 0;
+  let contextText = "";
+
+  for (let i = 0; i < pageSections.length; i++) {
+    const pageSection = pageSections[i];
+    const content = pageSection.content;
+    const encoded = tokenizer.encode(content);
+    tokenCount += encoded.text.length;
+
+    if (tokenCount >= 1500) {
+      break;
+    }
+
+    contextText += `${content.trim()}\n---\n`;
+  }
+
+  return contextText;
+}
 
 export default async function handler(req: NextRequest) {
   try {
@@ -51,8 +103,6 @@ export default async function handler(req: NextRequest) {
     if (!query) {
       throw new UserError("Missing query in request data");
     }
-    console.log("hello world");
-    console.log(query);
 
     const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -71,26 +121,9 @@ export default async function handler(req: NextRequest) {
       });
     }
 
-    const tokenizer = new GPT3Tokenizer({ type: "gpt3" });
-    let tokenCount = 0;
-    let contextText = "";
+    const foundText = await findEmbeddings(supabaseClient, sanitizedQuery);
 
-    //TODO: Pull this out into a const.ts file for matt
-    // const prompt = codeBlock`
-    //   ${oneLine`
-    //     You are a very enthusiastic Supabase representative who loves
-    //     to help people! Make up a random sentence that you care about
-    //   `}
-
-    //   Context sections:
-    //   ${contextText}
-
-    //   Question: """
-    //   ${sanitizedQuery}
-    //   """
-
-    //   Answer as markdown (including related code snippets if available):
-    // `;
+    // TODO: Pull this out into a const.ts file for matt
 
     const title = `Head of Talent Acquisition at Replit`;
     const prompt = codeBlock`
@@ -105,10 +138,10 @@ export default async function handler(req: NextRequest) {
     Consider the following: 
     If focused on marketing or user acquisition, focus on features that current customers like the most
     If focused on product development, focus on addressing the biggest pain points or customers needs
-    Start by answering the question as directly as possible. Be very concise. Give a 3 sentence summary and include direct quotes.
+    Start by answering the question as directly as possible. Be very concise. Give a 3 sentence summary and include direct quotes. After the summary, include a few short sentence-length snippets from the context sections that you used to make your inference.
 
     Context Sections between interviewer (Tegus Client) and the ${title}: 
-    ${replit_call}
+    ${foundText}
     `;
     //     ${replit_call}
 
@@ -119,17 +152,9 @@ export default async function handler(req: NextRequest) {
 
     console.log(prompt);
 
-    // Backup: do Promise.all to chain the response and turn off SSR and just receive the text back. Would be easier
-    // const response = await openai.createChatCompletion({
-    //   model: "gpt-3.5-turbo",
-    //   messages: [chatMessage],
-    //   max_tokens: 20,
-    //   temperature: 0.5,
-    //   // stream: true,
-    // });
-
     // Create an array of promises to push into Promise.all() based on requested responses
 
+    // This should be the string of IDs, for every ID pull embeddings
     const values = [1];
     let requestedPersonas = [];
     for (const value of values) {
@@ -137,7 +162,7 @@ export default async function handler(req: NextRequest) {
         openai.createChatCompletion({
           model: "gpt-4",
           messages: [chatMessage],
-          max_tokens: 256,
+          max_tokens: 512,
           temperature: 0.5,
           // stream: true,
         }),
@@ -158,20 +183,8 @@ export default async function handler(req: NextRequest) {
         counter++;
       }
     });
-    console.log(stitchedResponse);
 
-    // if (!response.ok) {
-    //   const error = await response.json();
-    //   throw new ApplicationError("Failed to generate completion", error);
-    // }
-
-    // Transform the response into a readable stream
-    // const stream = OpenAIStream(response);
-    // let chat_message = await response.json();
-    // chat_message = chat_message.choices[0].message.content;
-
-    // Return a StreamingTextResponse, which can be consumed by the client
-
+    // Stitch responses together and return to the backend
     return new Response(
       JSON.stringify({
         completion: stitchedResponse,
@@ -181,9 +194,6 @@ export default async function handler(req: NextRequest) {
         headers: { "Content-Type": "application/json" },
       },
     );
-
-    // return response;
-    //new StreamingTextResponse(stream);
   } catch (err: unknown) {
     if (err instanceof UserError) {
       return new Response(
