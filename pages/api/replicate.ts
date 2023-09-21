@@ -11,6 +11,7 @@ import {
 } from "openai-edge";
 import { OpenAIStream, StreamingTextResponse } from "ai";
 import { ApplicationError, UserError } from "@/lib/errors";
+import { replit_call } from "./const";
 
 const openAiKey = process.env.OPENAI_KEY;
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -73,20 +74,39 @@ export default async function handler(req: NextRequest) {
     let contextText = "";
 
     //TODO: Pull this out into a const.ts file for matt
+    // const prompt = codeBlock`
+    //   ${oneLine`
+    //     You are a very enthusiastic Supabase representative who loves
+    //     to help people! Make up a random sentence that you care about
+    //   `}
+
+    //   Context sections:
+    //   ${contextText}
+
+    //   Question: """
+    //   ${sanitizedQuery}
+    //   """
+
+    //   Answer as markdown (including related code snippets if available):
+    // `;
+
+    const title = `Head of Talent Acquisition at Replit`;
     const prompt = codeBlock`
-      ${oneLine`
-        You are a very enthusiastic Supabase representative who loves
-        to help people! Make up a random sentence that you care about
-      `}
+    You are the ${title}. Use the first person pronoun "we" in the answer. Do not say "you"
 
-      Context sections:
-      ${contextText}
+    How would you reply to this question: 
+    """
+    ${sanitizedQuery}
+    """
 
-      Question: """
-      ${sanitizedQuery}
-      """
+    Assess if the question seems reasonable given the data. If it is not reasonable or there is no mention of key words in the question, return "Not enough information" and do not proceed
+    Consider the following: 
+    If focused on marketing or user acquisition, focus on features that current customers like the most
+    If focused on product development, focus on addressing the biggest pain points or customers needs
+    Start by answering the question as directly as possible. Be very concise. Give a 3 sentence summary and include direct quotes.
 
-      Answer as markdown (including related code snippets if available):
+    Context Sections between interviewer (Tegus Client) and the ${title}: 
+    ${replit_call}
     `;
 
     const chatMessage: ChatCompletionRequestMessage = {
