@@ -108,34 +108,37 @@ export default async function handler(req: NextRequest) {
     Start by answering the question as directly as possible. Be very concise. Give a 3 sentence summary and include direct quotes.
 
     Context Sections between interviewer (Tegus Client) and the ${title}: 
+    ${replit_call}
     `;
     //     ${replit_call}
 
     const chatMessage: ChatCompletionRequestMessage = {
       role: "user",
-      content: "what's your favorite fruit?",
+      content: prompt,
     };
 
+    console.log(prompt);
+
     // Backup: do Promise.all to chain the response and turn off SSR and just receive the text back. Would be easier
-    const response = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo-16k",
-      messages: [chatMessage],
-      max_tokens: 20,
-      temperature: 0,
-      // stream: true,
-    });
+    // const response = await openai.createChatCompletion({
+    //   model: "gpt-3.5-turbo",
+    //   messages: [chatMessage],
+    //   max_tokens: 20,
+    //   temperature: 0.5,
+    //   // stream: true,
+    // });
 
     // Create an array of promises to push into Promise.all() based on requested responses
 
-    const values = [1, 2, 3];
+    const values = [1];
     let requestedPersonas = [];
     for (const value of values) {
       requestedPersonas.push(
         openai.createChatCompletion({
-          model: "gpt-3.5-turbo",
+          model: "gpt-4",
           messages: [chatMessage],
-          max_tokens: 20,
-          temperature: 1,
+          max_tokens: 256,
+          temperature: 0.5,
           // stream: true,
         }),
       );
@@ -157,15 +160,15 @@ export default async function handler(req: NextRequest) {
     });
     console.log(stitchedResponse);
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new ApplicationError("Failed to generate completion", error);
-    }
+    // if (!response.ok) {
+    //   const error = await response.json();
+    //   throw new ApplicationError("Failed to generate completion", error);
+    // }
 
     // Transform the response into a readable stream
     // const stream = OpenAIStream(response);
-    let chat_message = await response.json();
-    chat_message = chat_message.choices[0].message.content;
+    // let chat_message = await response.json();
+    // chat_message = chat_message.choices[0].message.content;
 
     // Return a StreamingTextResponse, which can be consumed by the client
 
@@ -179,7 +182,7 @@ export default async function handler(req: NextRequest) {
       },
     );
 
-    return response;
+    // return response;
     //new StreamingTextResponse(stream);
   } catch (err: unknown) {
     if (err instanceof UserError) {
