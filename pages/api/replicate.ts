@@ -51,6 +51,8 @@ export default async function handler(req: NextRequest) {
     if (!query) {
       throw new UserError("Missing query in request data");
     }
+    console.log("hello world");
+    console.log(query);
 
     const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -116,52 +118,44 @@ export default async function handler(req: NextRequest) {
 
     // Backup: do Promise.all to chain the response and turn off SSR and just receive the text back. Would be easier
     const response = await openai.createChatCompletion({
-      model: "gpt-4",
+      model: "gpt-3.5-turbo-16k",
       messages: [chatMessage],
       max_tokens: 20,
       temperature: 0,
       // stream: true,
     });
 
-    let promise1 = openai.createChatCompletion({
-      model: "gpt-4",
-      messages: [chatMessage],
-      max_tokens: 20,
-      temperature: 1,
-      // stream: true,
-    });
+    // Create an array of promises to push into Promise.all() based on requested responses
 
-    let promise2 = openai.createChatCompletion({
-      model: "gpt-4",
-      messages: [chatMessage],
-      max_tokens: 20,
-      temperature: 1,
-      // stream: true,
-    });
+    const values = [1, 2, 3];
+    let requestedPersonas = [];
+    for (const value of values) {
+      requestedPersonas.push(
+        openai.createChatCompletion({
+          model: "gpt-3.5-turbo",
+          messages: [chatMessage],
+          max_tokens: 20,
+          temperature: 1,
+          // stream: true,
+        }),
+      );
+    }
 
-    let promise3 = openai.createChatCompletion({
-      model: "gpt-4",
-      messages: [chatMessage],
-      max_tokens: 20,
-      temperature: 1,
-      // stream: true,
-    });
+    // Push promsies into Promise.all()
 
-    let promise4 = openai.createChatCompletion({
-      model: "gpt-4",
-      messages: [chatMessage],
-      max_tokens: 20,
-      temperature: 1,
-      // stream: true,
+    let stitchedResponse = "";
+    await Promise.all(requestedPersonas).then(async (values) => {
+      let counter = 1;
+      for (const value of values) {
+        const response = await value.json();
+        stitchedResponse +=
+          `Response #${counter}:\n` +
+          response.choices[0].message.content +
+          `\n`;
+        counter++;
+      }
     });
-
-    Promise.all([promise1, promise2, promise3, promise4]).then(
-      async (values) => {
-        for (const value of values) {
-          console.log(await value.json());
-        }
-      },
-    );
+    console.log(stitchedResponse);
 
     if (!response.ok) {
       const error = await response.json();
@@ -174,6 +168,17 @@ export default async function handler(req: NextRequest) {
     chat_message = chat_message.choices[0].message.content;
 
     // Return a StreamingTextResponse, which can be consumed by the client
+
+    return new Response(
+      JSON.stringify({
+        completion: stitchedResponse,
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+
     return response;
     //new StreamingTextResponse(stream);
   } catch (err: unknown) {

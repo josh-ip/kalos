@@ -13,6 +13,8 @@ interface popularQuestionsProps {
 export function EmailInput() {
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState<string>("");
+  const [nonStreamCompletion, setNonStreamCompletion] =
+    React.useState<string>("");
   const popularQuestion: popularQuestionsProps[] = [
     { question: "Why are my customers churning?" },
     { question: "What is the best way to retain my customers?" },
@@ -54,12 +56,25 @@ export function EmailInput() {
   //   setOpen(!open);
   //   setQuery("");
   // }
+  async function getData(query: string) {
+    const res = await fetch("/api/replicate", {
+      method: "POST",
+
+      body: JSON.stringify({ prompt: query }),
+    });
+    let response = await res.json();
+    response = response.completion;
+    console.log(response);
+    setNonStreamCompletion(response);
+    // console.log(await res.json()); // returns
+  }
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
     console.log(query);
-    complete(query);
-    complete2(query);
+    getData(query);
+    // complete(query);
+    // complete2(query);
   };
 
   return (
@@ -124,11 +139,14 @@ export function EmailInput() {
             <Typography variant="h4">Response: </Typography>
           </Grid>
           <Grid xs={12}>
-            <Typography variant="body1">{completion}</Typography>
+            {nonStreamCompletion.split("\n").map((item: string, i) => {
+              return (
+                <Typography display="block" variant="body1" key={i}>
+                  {item}
+                </Typography>
+              );
+            })}
           </Grid>
-          {/* <Grid xs={12}>
-            <Typography variant="body1">{completion2}</Typography>
-          </Grid> */}
         </Grid>
       </Grid>
     </Box>
