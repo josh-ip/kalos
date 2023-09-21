@@ -106,22 +106,62 @@ export default async function handler(req: NextRequest) {
     Start by answering the question as directly as possible. Be very concise. Give a 3 sentence summary and include direct quotes.
 
     Context Sections between interviewer (Tegus Client) and the ${title}: 
-    ${replit_call}
     `;
+    //     ${replit_call}
 
     const chatMessage: ChatCompletionRequestMessage = {
       role: "user",
-      content: prompt,
+      content: "what's your favorite fruit?",
     };
 
     // Backup: do Promise.all to chain the response and turn off SSR and just receive the text back. Would be easier
     const response = await openai.createChatCompletion({
       model: "gpt-4",
       messages: [chatMessage],
-      max_tokens: 512,
+      max_tokens: 20,
       temperature: 0,
-      stream: true,
+      // stream: true,
     });
+
+    let promise1 = openai.createChatCompletion({
+      model: "gpt-4",
+      messages: [chatMessage],
+      max_tokens: 20,
+      temperature: 1,
+      // stream: true,
+    });
+
+    let promise2 = openai.createChatCompletion({
+      model: "gpt-4",
+      messages: [chatMessage],
+      max_tokens: 20,
+      temperature: 1,
+      // stream: true,
+    });
+
+    let promise3 = openai.createChatCompletion({
+      model: "gpt-4",
+      messages: [chatMessage],
+      max_tokens: 20,
+      temperature: 1,
+      // stream: true,
+    });
+
+    let promise4 = openai.createChatCompletion({
+      model: "gpt-4",
+      messages: [chatMessage],
+      max_tokens: 20,
+      temperature: 1,
+      // stream: true,
+    });
+
+    Promise.all([promise1, promise2, promise3, promise4]).then(
+      async (values) => {
+        for (const value of values) {
+          console.log(await value.json());
+        }
+      },
+    );
 
     if (!response.ok) {
       const error = await response.json();
@@ -129,10 +169,13 @@ export default async function handler(req: NextRequest) {
     }
 
     // Transform the response into a readable stream
-    const stream = OpenAIStream(response);
+    // const stream = OpenAIStream(response);
+    let chat_message = await response.json();
+    chat_message = chat_message.choices[0].message.content;
 
     // Return a StreamingTextResponse, which can be consumed by the client
-    return new StreamingTextResponse(stream);
+    return response;
+    //new StreamingTextResponse(stream);
   } catch (err: unknown) {
     if (err instanceof UserError) {
       return new Response(
