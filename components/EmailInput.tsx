@@ -4,7 +4,7 @@ import * as React from "react";
 
 import { useCompletion } from "ai/react";
 import { Box, Button, FormControl, TextField, Typography } from "@mui/material";
-import Grid from "@Mui/material/Unstable_Grid2";
+import Grid from "@mui/material/Unstable_Grid2";
 
 interface popularQuestionsProps {
   question: string;
