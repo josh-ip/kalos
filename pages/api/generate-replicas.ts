@@ -1,8 +1,9 @@
 import { ApplicationError, UserError } from "@/lib/errors";
-import { createClient } from "@supabase/supabase-js";
+import { SupabaseClient, createClient } from "@supabase/supabase-js";
+import GPT3Tokenizer from "gpt3-tokenizer";
 import { NextRequest } from "next/server";
 import "openai";
-import { Configuration, OpenAIApi } from "openai-edge";
+import { Configuration, OpenAIApi, CreateEmbeddingResponse } from "openai-edge";
 
 import { inspect } from "util";
 
@@ -46,16 +47,6 @@ export default async function handler(req: NextRequest) {
     },
   });
 
-  //FIXME: use a different walker
-  /*
-  const embeddingSources: EmbeddingSource[] = [
-    ...(await walk("pages"))
-      .filter(({ path }) => /\.mdx?$/.test(path))
-      .filter(({ path }) => !ignoredFiles.includes(path))
-      .map((entry) => new MarkdownEmbeddingSource("guide", entry.path)),
-  ];
-  */
-
   const requestData = await req.json();
 
   if (!requestData) {
@@ -69,12 +60,6 @@ export default async function handler(req: NextRequest) {
   }
 
   const sections = chunkText(textInput);
-
-  // console.log(`Discovered ${embeddingSources.length} pages`);
-
-  // for every  chunk in an embeddings source, make an embedding
-  // for (const embeddingSource of embeddingSources) {
-  // const { type, source, path, parentPath } = embeddingSource;
 
   try {
     // TODO: chunk the context window for embedding
@@ -95,11 +80,6 @@ export default async function handler(req: NextRequest) {
       throw upsertPageError;
     }
 
-    // console.log(
-    //   `[${path}] Adding ${sections.length} page sections (with embeddings)`,
-    // );
-
-    //FIXME: update this away from the current props of section
     for (const content of sections) {
       console.log(content);
       // OpenAI recommends replacing newlines with spaces for best results (specific to embeddings)
@@ -111,26 +91,25 @@ export default async function handler(req: NextRequest) {
           input,
         });
 
-        const responseData = await embeddingResponse.json();
-
-        console.log(responseData);
+        const {
+          usage: { total_tokens },
+          data: [{ embedding }],
+          data,
+        } = await embeddingResponse.json();
 
         if (embeddingResponse.status !== 200) {
           console.error("ERROR");
-          throw new Error(inspect(responseData.data, false, 2));
+          throw new Error(inspect(data, false, 2));
         }
 
-        // const [responseData] = embeddingResponse.data.data;
-
-        // FIXME: update this to use the new table
         const { error: insertPageSectionError, data: pageSection } =
           await supabaseClient
             .from("nods_replica_page_section")
             .insert({
               page_id: page.id,
               content,
-              token_count: responseData.usage.total_tokens,
-              embedding: responseData.data[0].embedding,
+              token_count: total_tokens,
+              embedding,
             })
             .select()
             .limit(1)
@@ -152,19 +131,6 @@ export default async function handler(req: NextRequest) {
         throw err;
       }
     }
-
-    /*
-      // Set page checksum so that we know this page was stored successfully
-      const { error: updatePageError } = await supabaseClient
-        .from("nods_page")
-        .update({ checksum })
-        .filter("id", "eq", page.id);
-        
-
-      if (updatePageError) {
-        throw updatePageError;
-      }
-      */
   } catch (err) {
     console.error(
       `one/multiple of its page sections failed to store properly. Page has been marked with null checksum to indicate that it needs to be re-generated.`,
