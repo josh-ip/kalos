@@ -11,7 +11,7 @@ import {
 } from "openai-edge";
 import { OpenAIStream, StreamingTextResponse } from "ai";
 import { ApplicationError, UserError } from "@/lib/errors";
-import { replit_call } from "./const";
+// import { replit_call } from "./const";
 
 const openAiKey = process.env.OPENAI_KEY;
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
