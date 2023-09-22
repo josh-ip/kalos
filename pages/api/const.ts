@@ -1,10 +1,14 @@
 import { codeBlock } from "common-tags";
 
+// TODO: pull out chips – into frontend file
+
+
 export const completionTemperature = 0.5;
 export const completionMaxTokens = 256; // Maximum number of tokens allowed in a completion response
 export const completionModel = "gpt-3.5-turbo"; // other option: "gpt-3.5-turbo-16k", "gpt-4"
 
 export const replicaUserSet = [13, 16]; // maintain a list of the users by their id in the nods_replica_page table that you want to be listed
+
 
 export function generatePrompt(title: string, question: string) {
   return codeBlock`
