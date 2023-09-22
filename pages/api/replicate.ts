@@ -1,6 +1,5 @@
 import type { NextRequest } from "next/server";
 import { SupabaseClient, createClient } from "@supabase/supabase-js";
-import { codeBlock, oneLine } from "common-tags";
 import GPT3Tokenizer from "gpt3-tokenizer";
 import {
   Configuration,
@@ -9,9 +8,14 @@ import {
   CreateEmbeddingResponse,
   ChatCompletionRequestMessage,
 } from "openai-edge";
-import { OpenAIStream, StreamingTextResponse } from "ai";
 import { ApplicationError, UserError } from "@/lib/errors";
-import { replit_call } from "./const";
+import {
+  completionMaxTokens,
+  completionModel,
+  completionTemperature,
+  generatePrompt,
+  replicaUserSet,
+} from "./const";
 
 const openAiKey = process.env.OPENAI_KEY;
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -24,7 +28,11 @@ const openai = new OpenAIApi(config);
 
 export const runtime = "edge";
 
-async function findEmbeddings(supabaseClient: SupabaseClient, query: string) {
+async function findEmbeddings(
+  supabaseClient: SupabaseClient,
+  query: string,
+  id: number,
+) {
   // Create embedding from query
   const embeddingResponse = await openai.createEmbedding({
     model: "text-embedding-ada-002",
@@ -43,12 +51,13 @@ async function findEmbeddings(supabaseClient: SupabaseClient, query: string) {
   }: CreateEmbeddingResponse = await embeddingResponse.json();
 
   const { error: matchError, data: pageSections } = await supabaseClient.rpc(
-    "match_replica_page_sections",
+    "match_replica_page_sections_by_id",
     {
       embedding,
       match_threshold: 0.78,
       match_count: 10,
       min_content_length: 50,
+      user_id: id,
     },
   );
 
@@ -121,50 +130,34 @@ export default async function handler(req: NextRequest) {
       });
     }
 
-    const foundText = await findEmbeddings(supabaseClient, sanitizedQuery);
-
-    // TODO: Pull this out into a const.ts file for matt
-
-    const title = `Head of Talent Acquisition at Replit`;
-    const prompt = codeBlock`
-    You are the ${title}. Use the first person pronoun "we" in the answer. Do not say "you"
-
-    How would you reply to this question: 
-    """
-    ${sanitizedQuery}
-    """
-
-    Assess if the question seems reasonable given the data. If it is not reasonable or there is no mention of key words in the question, return "Not enough information" and do not proceed
-    Consider the following: 
-    If focused on marketing or user acquisition, focus on features that current customers like the most
-    If focused on product development, focus on addressing the biggest pain points or customers needs
-    Start by answering the question as directly as possible. Be very concise. Give a 3 sentence summary and include direct quotes. After the summary, include a few short sentence-length snippets from the context sections that you used to make your inference.
-
-    Context Sections between interviewer (Tegus Client) and the ${title}: 
-    ${foundText}
-    `;
-    //     ${replit_call}
-
-    const chatMessage: ChatCompletionRequestMessage = {
-      role: "user",
-      content: prompt,
-    };
-
-    console.log(prompt);
-
     // Create an array of promises to push into Promise.all() based on requested responses
 
     // This should be the string of IDs, for every ID pull embeddings
-    const values = [1];
+    // TODO: needs to be filled out with real users and fed in from the front end upon selection – think about how to maintain this constant
+    // TODO: as default need to retrieve all IDs in the table and just iterate through them
+
     let requestedPersonas = [];
-    for (const value of values) {
+    for (const value of replicaUserSet) {
+      const title = `Head of Talent Acquisition at Replit`; // TODO: add the title in the retrieval of this information
+
+      const foundText = await findEmbeddings(
+        supabaseClient,
+        sanitizedQuery,
+        value,
+      );
+      const prompt = generatePrompt(title, sanitizedQuery);
+
+      const chatMessage: ChatCompletionRequestMessage = {
+        role: "user",
+        content: prompt + foundText,
+      };
+
       requestedPersonas.push(
         openai.createChatCompletion({
-          model: "gpt-4",
+          model: completionModel,
           messages: [chatMessage],
-          max_tokens: 512,
-          temperature: 0.5,
-          // stream: true,
+          max_tokens: completionMaxTokens,
+          temperature: completionTemperature,
         }),
       );
     }

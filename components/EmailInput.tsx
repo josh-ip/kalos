@@ -11,7 +11,6 @@ interface popularQuestionsProps {
 }
 
 export function EmailInput() {
-  const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState<string>("");
   const [nonStreamCompletion, setNonStreamCompletion] =
     React.useState<string>("");
@@ -22,40 +21,12 @@ export function EmailInput() {
     { question: "How much would my customers pay for {X}?" },
   ];
 
-  // need to figure out how you can do this multiple time. read more about useCompletion and how it works and whether ou need to do something different
-
+  // TODO: Clean up this file
   const { complete, completion, isLoading, error } = useCompletion({
     id: "1",
     api: "/api/replicate",
   });
 
-  const completionObject = useCompletion({
-    api: "/api/replicate",
-  });
-
-  const complete2 = completionObject.complete;
-  const completion2 = completionObject.completion;
-
-  // React.useEffect(() => {
-  //   const down = (e: KeyboardEvent) => {
-  //     if (e.key === "k" && e.metaKey) {
-  //       setOpen(true);
-  //     }
-
-  //     if (e.key === "Escape") {
-  //       console.log("esc");
-  //       handleModalToggle();
-  //     }
-  //   };
-
-  //   document.addEventListener("keydown", down);
-  //   return () => document.removeEventListener("keydown", down);
-  // }, []);
-
-  // function handleModalToggle() {
-  //   setOpen(!open);
-  //   setQuery("");
-  // }
   async function getData(query: string) {
     const res = await fetch("/api/replicate", {
       method: "POST",
@@ -66,15 +37,12 @@ export function EmailInput() {
     response = response.completion;
     console.log(response);
     setNonStreamCompletion(response);
-    // console.log(await res.json()); // returns
   }
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
     console.log(query);
     getData(query);
-    // complete(query);
-    // complete2(query);
   };
 
   return (
