@@ -1,4 +1,15 @@
-## README Additions from Josh
+# Admin Instructions
+## How to commit a PR on GitHub
+1. [Setup] I expect you to have to add your git.user git.email in the Terminal (remember you can access Terminal from the menu bar on vscode). [This article](https://docs.github.com/en/get-started/getting-started-with-git/setting-your-username-in-git) should help you.
+2. To commit:
+    * Make all your changes that you want, make sure to save
+    * Go to the third button from the top of the VSCode that looks like a branch
+    * Enter in a name for your commit in the "Message..." (e.g. "Updating the prompt")
+    * Press "Commit"
+    * Press "Yes" if you get the "There are no staged changes..."
+    * Press the "Sync Changes" button and "OK" to "This action will pull and push commits..."
+    * If you go back to github.com and wait a couple minutes, you should see a green check towards the top of the page above the "components" folder – should see your profile, commmit name
+        * Vercel has multi user but you have to pay for it so for now let's not
 
 ### Setup
 
