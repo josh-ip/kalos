@@ -76,6 +76,7 @@ export function EmailInput() {
       replica,
     );
     console.log(replicaArray);
+    setNonStreamCompletion("");
     getData(query, replicaArray);
   };
 

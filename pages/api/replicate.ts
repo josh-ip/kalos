@@ -139,14 +139,14 @@ export default async function handler(req: NextRequest) {
 
     let requestedPersonas = [];
     for (const value of replicas) {
-      const title = `Head of Talent Acquisition at Replit`; // TODO: add the title in the retrieval of this information
+      // const title = `An Ashby User`; // TODO: add the title in the retrieval of this information
 
       const foundText = await findEmbeddings(
         supabaseClient,
         sanitizedQuery,
         value,
       );
-      const prompt = generatePrompt(title, sanitizedQuery);
+      const prompt = generatePrompt(sanitizedQuery);
 
       const chatMessage: ChatCompletionRequestMessage = {
         role: "user",
