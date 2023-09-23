@@ -14,9 +14,7 @@ import {
   completionModel,
   completionTemperature,
   generatePrompt,
-  replicaUserSet,
 } from "./const";
-
 
 const openAiKey = process.env.OPENAI_KEY;
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -108,7 +106,9 @@ export default async function handler(req: NextRequest) {
       throw new UserError("Missing request data");
     }
 
-    const { prompt: query } = requestData;
+    const { prompt: query, replicas } = requestData;
+
+    console.log(replicas);
 
     if (!query) {
       throw new UserError("Missing query in request data");
@@ -138,7 +138,7 @@ export default async function handler(req: NextRequest) {
     // TODO: as default need to retrieve all IDs in the table and just iterate through them
 
     let requestedPersonas = [];
-    for (const value of replicaUserSet) {
+    for (const value of replicas) {
       const title = `Head of Talent Acquisition at Replit`; // TODO: add the title in the retrieval of this information
 
       const foundText = await findEmbeddings(
@@ -178,10 +178,39 @@ export default async function handler(req: NextRequest) {
       }
     });
 
+    const summaryMessage: ChatCompletionRequestMessage = {
+      role: "user",
+      content: `Summarize the following responses into one set of three sentences \n${stitchedResponse}`,
+    };
+
+    const summary = await openai.createChatCompletion({
+      model: completionModel,
+      messages: [summaryMessage],
+      max_tokens: completionMaxTokens,
+      temperature: completionTemperature,
+      stream: false,
+    });
+
+    if (!summary.ok) {
+      const error = await summary.json();
+      throw new ApplicationError("Failed to generate completion", error);
+    }
+
+    const {
+      choices: [
+        {
+          message: { content: summaryText },
+        },
+      ],
+    } = await summary.json();
+
+    const summaryAndResponses =
+      "Summary:\n" + summaryText + "\n \n" + stitchedResponse;
+
     // Stitch responses together and return to the backend
     return new Response(
       JSON.stringify({
-        completion: stitchedResponse,
+        completion: summaryAndResponses,
       }),
       {
         status: 200,
