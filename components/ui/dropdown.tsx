@@ -33,7 +33,11 @@ export default function GroupedSelect({
           <ListSubheader>Segment</ListSubheader>
           {segments.length > 0 &&
             segments.map((segment: segmentProps, index: number) => {
-              return <MenuItem value={index}>{segment.name}</MenuItem>;
+              return (
+                <MenuItem key={index} value={index}>
+                  {segment.name}
+                </MenuItem>
+              );
             })}
 
           <ListSubheader>Individual User</ListSubheader>
@@ -41,7 +45,7 @@ export default function GroupedSelect({
             individualUserSegments.map(
               (individualUser: segmentProps, index: number) => {
                 return (
-                  <MenuItem value={index + segments.length}>
+                  <MenuItem key={index} value={index + segments.length}>
                     {individualUser.name}
                   </MenuItem>
                 );
