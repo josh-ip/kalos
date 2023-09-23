@@ -1,14 +1,40 @@
-## README Additions from Josh
+# Admin Instructions
+## How to edit in VSCode
+1. There are two main files you will want to edit.
+2. The first is just for editing the chip text. You can find that file by navigating using VSCode Menu Bar on left to [components > const.ts]
+3. The second is everything else. You can find that file by navigating to [pages > api > const.ts]
+4. After you've made your edits make sure to save with cmd + s and then do a commit
+5. Quick tip: If for some reason you've lost the Menu Bar, press cmd + b
 
-### Setup
+## How to commit a PR on GitHub
+1. [Setup] I expect you to have to add your git.user git.email in the Terminal (remember you can access Terminal from the menu bar on vscode). [This article](https://docs.github.com/en/get-started/getting-started-with-git/setting-your-username-in-git) should help you.
+2. To commit:
+    * Make all your changes that you want, make sure to save
+    * Go to the third button from the top of the VSCode that looks like a branch
+    * Enter in a name for your commit in the "Message..." (e.g. "Updating the prompt")
+    * Press "Commit"
+    * Press "Yes" if you get the "There are no staged changes..."
+    * Press the "Sync Changes" button and "OK" to "This action will pull and push commits..."
+    * If you go back to github.com and wait a couple minutes, you should see a green check towards the top of the page above the "components" folder – should see your profile, commmit name
+        * Vercel has multi user but you have to pay for it so for now let's not
 
-1. Need to add a .env file with the environmental variables (Josh has them and can send). Instructions on how to make a .env file are below in "Local Development" –> "Configuration"
+## Using Postman to make a user / embedding
+[Follow this Scribe](https://scribehow.com/shared/How_to_add_a_user_and_its_embeddings__ifYCmb4oThKNo0Fnl4tJbw)
 
-### Ongoing usage
+## How to delete a user using Supabase
+[Follow this Scribe](https://scribehow.com/shared/Deleting_a_Row_in_Supabase_Database__E_TGBH1eTPuujdppDzdanQ)
+
+## How to add a segment using Supabase
+[Follow this Scribe](https://scribehow.com/shared/How_to_add_a_new_segment__jJa9eZUkQjGviPHgoAoBkw)
+
+## How to delete a segment using Supabase
+[Follow this Scribe](https://scribehow.com/shared/Delete_Segment__lrpRcTz3TxuQ0nt7fSOa-w)
+
+## Running the app locally
 
 1. to run the server, type "pnpm dev" into the terminal
 2. If you are getting some type of node modules exception, try the command "pnpm install" and then "pnpm dev" again
-3. remember the URL is localhost:3000 (/kalos)
+3. remember the URL is localhost:3000
 
 # Next.js OpenAI Doc Search Starter
 
