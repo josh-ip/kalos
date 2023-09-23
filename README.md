@@ -11,6 +11,9 @@
     * If you go back to github.com and wait a couple minutes, you should see a green check towards the top of the page above the "components" folder – should see your profile, commmit name
         * Vercel has multi user but you have to pay for it so for now let's not
 
+## Using Postman to make an embedding
+[Follow this Scribe](https://scribehow.com/shared/How_to_add_a_user_and_its_embeddings__ifYCmb4oThKNo0Fnl4tJbw)
+
 ### Setup
 
 1. Need to add a .env file with the environmental variables (Josh has them and can send). Instructions on how to make a .env file are below in "Local Development" –> "Configuration"
