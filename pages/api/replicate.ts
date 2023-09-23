@@ -14,6 +14,7 @@ import {
   completionModel,
   completionTemperature,
   generatePrompt,
+  summaryPrompt,
 } from "./const";
 
 const openAiKey = process.env.OPENAI_KEY;
@@ -180,7 +181,7 @@ export default async function handler(req: NextRequest) {
 
     const summaryMessage: ChatCompletionRequestMessage = {
       role: "user",
-      content: `Summarize the following responses into one set of three sentences \n${stitchedResponse}`,
+      content: summaryPrompt(stitchedResponse),
     };
 
     const summary = await openai.createChatCompletion({

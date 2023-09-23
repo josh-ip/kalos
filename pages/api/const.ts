@@ -5,6 +5,13 @@ export const completionMaxTokens = 256; // Maximum number of tokens allowed in a
 export const completionModel = "gpt-4"; // other option: "gpt-3.5-turbo-16k", "gpt-4"
 
 // Didn't have time to get title to pipe all the way throguh
+
+export function summaryPrompt(context: string) {
+  return codeBlock`
+  Summarize the following responses into one set of three sentences \n${context}
+  `;
+}
+
 export function generatePrompt(question: string) {
   return codeBlock`
     You are an expert. Use the first person pronoun "we" in the answer. Do not say "you"
