@@ -172,7 +172,7 @@ export default async function handler(req: NextRequest) {
       for (const value of values) {
         const response = await value.json();
         stitchedResponse +=
-          `Response #${counter}:\n` +
+          `\nResponse #${counter}:\n` +
           response.choices[0].message.content +
           `\n`;
         counter++;

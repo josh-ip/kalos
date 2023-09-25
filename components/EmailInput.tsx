@@ -103,7 +103,7 @@ export function EmailInput() {
                   />
                 </Grid>
                 <Grid xs={12} sx={{ mt: 2 }}>
-                  <Typography variant="h4">Message: </Typography>
+                  <Typography variant="h4">Question: </Typography>
                 </Grid>
                 <Grid xs={12}>
                   {popularQuestions.length > 0 &&
@@ -151,7 +151,7 @@ export function EmailInput() {
           </Grid>
           <Grid xs={12}>
             <Grid xs={12}>
-              <Typography variant="h4">Response: </Typography>
+              <Typography variant="h4">Answer: </Typography>
             </Grid>
             <Grid xs={12}>
               {nonStreamCompletion.split("\n").map((item: string, i) => {
