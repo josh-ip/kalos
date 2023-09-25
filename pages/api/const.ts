@@ -8,7 +8,9 @@ export const completionModel = "gpt-4"; // other option: "gpt-3.5-turbo-16k", "g
 
 export function summaryPrompt(context: string) {
   return codeBlock`
-  Summarize the following responses into one set of three sentences \n${context}
+  Review the responses below and give an answer that is consistent with the majority opinion. Ignore and do not count any resposnes that say "Not enough information". Justify the answer by providing a percentage of all responses that had this opinion, out of all responses. Give a summary of why these respondents gave this answers in 1-2 sentences. 
+  \n${context}
+  
   `;
 }
 
@@ -25,7 +27,7 @@ export function generatePrompt(question: string) {
     Consider the following: 
     If focused on marketing or user acquisition, focus on features that current customers like the most
     If focused on product development, focus on addressing the biggest pain points or customers needs
-    Start by answering the question as directly as possible. Be very concise. Give a 3 sentence summary and include direct quotes. After the summary, include a few short sentence-length snippets from the context sections that you used to make your inference.
+    Start by answering the question as directly as possible. Be very concise. Give a 3 sentence summary and include as many direct quotes as relevent.
 
     Context Sections between interviewer (Tegus Client) and the expert (you):
      
