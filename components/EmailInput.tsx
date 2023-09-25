@@ -87,7 +87,7 @@ export function EmailInput() {
           <Grid xs={12} sx={{ textAlign: "center", mb: 2 }}>
             <Typography variant="h2">Kalos</Typography>
             <Typography variant="h3">
-              Instant Feedback from your customer data
+              Instant Focus Groups with your Customer Data
             </Typography>
           </Grid>
           <Grid xs={12}>
