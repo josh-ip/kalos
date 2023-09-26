@@ -157,9 +157,26 @@ export function EmailInput() {
               {nonStreamCompletion
                 ? nonStreamCompletion.split("\n").map((item: string, i) => {
                     return (
-                      <Typography display="block" variant="body1" key={i}>
-                        {item}
-                      </Typography>
+                      <>
+                        {item && item.includes(":") ? (
+                          <>
+                            {" "}
+                            <br />
+                            <Typography
+                              sx={{ fontWeight: "bold" }}
+                              display="block"
+                              variant="body1"
+                              key={i}
+                            >
+                              {item}
+                            </Typography>
+                          </>
+                        ) : (
+                          <Typography display="block" variant="body1" key={i}>
+                            {item}
+                          </Typography>
+                        )}
+                      </>
                     );
                   })
                 : ""}
