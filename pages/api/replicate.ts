@@ -14,6 +14,7 @@ import {
   completionModel,
   completionTemperature,
   generatePrompt,
+  generatePrompwithTitle,
   summaryPrompt,
 } from "./const";
 
@@ -139,6 +140,7 @@ export default async function handler(req: NextRequest) {
     // TODO: as default need to retrieve all IDs in the table and just iterate through them
 
     let requestedPersonas = [];
+    let personaTitles: string[] = [];
     for (const value of replicas) {
       // const title = `An Ashby User`; // TODO: add the title in the retrieval of this information
 
@@ -147,7 +149,20 @@ export default async function handler(req: NextRequest) {
         sanitizedQuery,
         value,
       );
-      const prompt = generatePrompt(sanitizedQuery);
+
+      const { data, error } = await supabaseClient
+        .from("nods_replica_page")
+        .select("replica_title")
+        .eq("id", value);
+      console.log(data);
+
+      let replicaTitle = "";
+      if (data) {
+        replicaTitle = data[0].replica_title;
+      }
+      personaTitles.push(replicaTitle);
+
+      const prompt = generatePrompwithTitle(replicaTitle, sanitizedQuery);
 
       const chatMessage: ChatCompletionRequestMessage = {
         role: "user",
@@ -158,7 +173,7 @@ export default async function handler(req: NextRequest) {
         openai.createChatCompletion({
           model: completionModel,
           messages: [chatMessage],
-          max_tokens: 128,
+          max_tokens: completionMaxTokens,
           temperature: completionTemperature,
         }),
       );
@@ -168,18 +183,18 @@ export default async function handler(req: NextRequest) {
 
     let stitchedResponse = "";
     await Promise.all(requestedPersonas).then(async (values) => {
-      let counter = 1;
+      let counter = 0;
+
       for (const value of values) {
         const response = await value.json();
+
         stitchedResponse +=
-          `Response #${counter}:\n` +
+          `${personaTitles[counter]}:\n` +
           response.choices[0].message.content +
-          `\n`;
+          ` \n \n `;
         counter++;
       }
     });
-
-    /*
 
     const summaryMessage: ChatCompletionRequestMessage = {
       role: "user",
@@ -209,12 +224,11 @@ export default async function handler(req: NextRequest) {
 
     const summaryAndResponses =
       "Summary:\n" + summaryText + "\n \n" + stitchedResponse;
-      */
 
     // Stitch responses together and return to the backend
     return new Response(
       JSON.stringify({
-        completion: stitchedResponse,
+        completion: summaryAndResponses,
       }),
       {
         status: 200,
