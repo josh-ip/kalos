@@ -87,7 +87,7 @@ export function EmailInput() {
           <Grid xs={12} sx={{ textAlign: "center", mb: 2 }}>
             <Typography variant="h2">Kalos</Typography>
             <Typography variant="h3">
-              Instant Focus Groups with your Customer Data
+              Instant Focus Groups from your Customer Data
             </Typography>
           </Grid>
           <Grid xs={12}>
@@ -95,7 +95,7 @@ export function EmailInput() {
               <FormControl fullWidth>
                 <Grid xs={12}>
                   {/* If made a multi drop down, this can be used to select which users to talk to go to into prompt. dropdown fueled by a user table in backend */}
-                  <Typography variant="h4">To:</Typography>
+                  <Typography variant="h4">Audience:</Typography>
                   <GroupedSelect
                     segments={segments}
                     individualUserSegments={individualUserSegments}

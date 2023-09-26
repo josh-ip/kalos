@@ -172,9 +172,9 @@ export default async function handler(req: NextRequest) {
       for (const value of values) {
         const response = await value.json();
         stitchedResponse +=
-          `\nResponse #${counter}:\n` +
+          `Response #${counter}:\n` +
           response.choices[0].message.content +
-          `\n`;
+          `\n\n`;
         counter++;
       }
     });
