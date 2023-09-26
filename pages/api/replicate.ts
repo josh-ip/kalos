@@ -158,7 +158,7 @@ export default async function handler(req: NextRequest) {
         openai.createChatCompletion({
           model: completionModel,
           messages: [chatMessage],
-          max_tokens: completionMaxTokens,
+          max_tokens: 128,
           temperature: completionTemperature,
         }),
       );
@@ -174,10 +174,12 @@ export default async function handler(req: NextRequest) {
         stitchedResponse +=
           `Response #${counter}:\n` +
           response.choices[0].message.content +
-          `\n\n`;
+          `\n`;
         counter++;
       }
     });
+
+    /*
 
     const summaryMessage: ChatCompletionRequestMessage = {
       role: "user",
@@ -207,11 +209,12 @@ export default async function handler(req: NextRequest) {
 
     const summaryAndResponses =
       "Summary:\n" + summaryText + "\n \n" + stitchedResponse;
+      */
 
     // Stitch responses together and return to the backend
     return new Response(
       JSON.stringify({
-        completion: summaryAndResponses,
+        completion: stitchedResponse,
       }),
       {
         status: 200,

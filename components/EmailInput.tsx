@@ -154,13 +154,15 @@ export function EmailInput() {
               <Typography variant="h4">Answer: </Typography>
             </Grid>
             <Grid xs={12}>
-              {nonStreamCompletion.split("\n").map((item: string, i) => {
-                return (
-                  <Typography display="block" variant="body1" key={i}>
-                    {item}
-                  </Typography>
-                );
-              })}
+              {nonStreamCompletion
+                ? nonStreamCompletion.split("\n").map((item: string, i) => {
+                    return (
+                      <Typography display="block" variant="body1" key={i}>
+                        {item}
+                      </Typography>
+                    );
+                  })
+                : ""}
             </Grid>
           </Grid>
         </Grid>
